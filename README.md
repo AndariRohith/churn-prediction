@@ -1,64 +1,76 @@
 # Customer Churn Prediction
 
-A machine learning project that predicts whether a telecom customer is likely to churn (leave the company), with a Streamlit web app for making predictions.
+Predicts whether a telecom customer is likely to churn (leave the company), using an XGBoost model served through a Streamlit web app.
 
-**Live demo:** _add your Streamlit app link here after deploying_
+**Live demo:** [rossi-telco-churn-prediction-app.streamlit.app](https://rossi-telco-churn-prediction-app.streamlit.app/)
+
+> The free Streamlit plan puts apps to sleep when nobody is using them. If you see a "Wake up" button, click it and wait about a minute.
 
 ## Overview
 
-- **Problem:** Predict customer churn from account, service, and billing information.
-- **Dataset:** [Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) (`WA_Fn-UseC_-Telco-Customer-Churn.csv`), 7,043 customers with 21 columns.
-- **Model:** XGBoost classifier inside a scikit-learn `Pipeline` with a `ColumnTransformer` for preprocessing.
-- **Accuracy:** about 0.80 on the held-out test set.
-- **App:** Streamlit form that takes customer details and shows whether the customer will stay or churn.
+| | |
+|---|---|
+| **Problem** | Predict customer churn from account, service, and billing information |
+| **Dataset** | [Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn): 7,043 customers, 21 columns |
+| **Model** | XGBoost classifier inside a scikit-learn `Pipeline` with a `ColumnTransformer` for preprocessing |
+| **Accuracy** | About 0.80 on the held-out test set |
+| **App** | Streamlit form that returns whether the customer will stay or churn |
 
 ## Project Structure
 
 ```
-data_science_project/
+churn-prediction/
 ├── churn_analysis_v1.ipynb                # EDA, preprocessing, model training
 ├── churn_model.pkl                        # Saved pipeline (preprocessing + XGBoost)
 ├── predictions.py                         # Streamlit app
 ├── requirements.txt                       # Python dependencies
 ├── data_dictionary.md                     # Description of each column
 ├── WA_Fn-UseC_-Telco-Customer-Churn.csv   # Dataset
+├── .gitignore
 └── README.md
 ```
 
 ## How the Model Works
 
-The saved file `churn_model.pkl` is a single scikit-learn pipeline:
+The file `churn_model.pkl` holds one scikit-learn pipeline:
 
 ```
-raw customer data -> ColumnTransformer (encoding / scaling) -> XGBoost -> prediction
+raw customer data -> ColumnTransformer (preprocessing) -> XGBoost -> prediction
 ```
 
-Because preprocessing is inside the pipeline, the app passes raw values (for example `"Month-to-month"`) and no manual transformation is needed.
+Preprocessing lives inside the pipeline, so the app sends raw values such as `"Month-to-month"` and no manual transformation is needed.
 
-The model uses these 19 input features (`customerID` and `Churn` are removed):
+### Input features
 
-`gender`, `SeniorCitizen`, `Partner`, `Dependents`, `tenure`, `PhoneService`, `MultipleLines`, `InternetService`, `OnlineSecurity`, `OnlineBackup`, `DeviceProtection`, `TechSupport`, `StreamingTV`, `StreamingMovies`, `Contract`, `PaperlessBilling`, `PaymentMethod`, `MonthlyCharges`, `TotalCharges`
+The model takes 19 features (`customerID` and `Churn` are excluded):
+
+| Group | Features |
+|---|---|
+| Demographics | `gender`, `SeniorCitizen`, `Partner`, `Dependents` |
+| Account | `tenure`, `Contract`, `PaperlessBilling`, `PaymentMethod` |
+| Services | `PhoneService`, `MultipleLines`, `InternetService`, `OnlineSecurity`, `OnlineBackup`, `DeviceProtection`, `TechSupport`, `StreamingTV`, `StreamingMovies` |
+| Charges | `MonthlyCharges`, `TotalCharges` |
 
 See `data_dictionary.md` for details on each column.
 
-## Getting Started
+## Run Locally
 
-### 1. Clone the repository
+**1. Clone the repository**
 
 ```bash
-git clone <your-repo-url>
-cd data_science_project
+git clone https://github.com/AndariRohith/churn-prediction.git
+cd churn-prediction
 ```
 
-### 2. Install dependencies
+**2. Install dependencies**
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-The model was trained with **Python 3.14**, numpy 2.5.0, scikit-learn 1.9.0 and xgboost 3.4.1. Pickle files depend on library versions, so use the versions pinned in `requirements.txt`.
+The model was trained with Python 3.14, numpy 2.5.0, scikit-learn 1.9.0 and xgboost 3.4.1. Pickle files depend on library versions, so keep the versions pinned in `requirements.txt`.
 
-### 3. Run the app
+**3. Start the app**
 
 ```bash
 python -m streamlit run predictions.py
@@ -72,25 +84,27 @@ The app opens at `http://localhost:8501`.
 2. Click **Churn Test Result**.
 3. The app shows whether the customer is likely to stay or churn.
 
-**Note:** keep the inputs consistent. If *Phone Service* is "No", set *Multiple Lines* to "No phone service". If *Internet Service* is "No", set the internet add-ons (Online Security, Online Backup, Device Protection, Tech Support, Streaming TV, Streaming Movies) to "No internet service".
+**Keep the inputs consistent.** The form does not block impossible combinations, so choose them yourself:
+
+- If *Phone Service* is "No", set *Multiple Lines* to "No phone service".
+- If *Internet Service* is "No", set Online Security, Online Backup, Device Protection, Tech Support, Streaming TV and Streaming Movies to "No internet service".
 
 ## Retraining the Model
 
-Open `churn_analysis_v1.ipynb`, run all cells, and the final cell saves a new `churn_model.pkl`. Always retrain and run the app in the same environment so library versions match.
+Open `churn_analysis_v1.ipynb` and run all cells to train the model and save a new `churn_model.pkl`. Train and run the app in the same environment, with the same library versions, or the pickle may fail to load.
 
 ## Deployment
 
-The app can be deployed for free on [Streamlit Community Cloud](https://share.streamlit.io):
-
-1. Push the project to a GitHub repository (including `churn_model.pkl` and `requirements.txt`).
-2. Sign in to Streamlit Community Cloud with GitHub.
-3. Choose **New app**, select the repository, and set the main file to `predictions.py`.
-4. Click **Deploy**.
+The app is deployed on [Streamlit Community Cloud](https://share.streamlit.io) straight from this repository (`main` branch, main file `predictions.py`). Every push to `main` redeploys it automatically.
 
 ## Tech Stack
 
 Python, pandas, NumPy, scikit-learn, XGBoost, Streamlit
 
+## Limitations
+
+This is a learning project. The model was trained on one public dataset and should not be used for real business decisions without further validation.
+
 ## Author
 
-_Your name_
+**Andari Rohith**: [GitHub](https://github.com/AndariRohith)
